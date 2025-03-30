@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Reminder</title>
+    <style>
+        :root {
+            --primary-color: #2196F3;
+            --primary-dark: #0d47a1;
+            --primary-light: #e3f2fd;
+            --water-color: rgba(33, 150, 243, 0.8);
+            --water-highlight: rgba(255, 255, 255, 0.4);
+            --bottle-outline: rgba(30, 30, 30, 0.2);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 15px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 25px 20px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+        }
+        
+        .water-bottle {
+            width: min(250px, 80%);
+            margin: 0 auto 20px auto;
+        }
+        
+        .bottle-container {
+            position: relative;
+            width: 100%;
+            height: 350px;
+        }
+        
+        .bottle-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0px 5px 10px rgba(0, 0, 0, 0.1));
+        }
+        
+        .water-level-indicator {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+        }
+        
+        .quote-container {
+            background: linear-gradient(to right, #e3f2fd, #bbdefb);
+            padding: 18px 15px;
+            border-radius: 15px;
+            margin: 20px 0;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .quote-text {
+            font-style: italic;
+            color: var(--primary-dark);
+            line-height: 1.4;
+            font-size: clamp(0.9rem, 3vw, 1.1rem);
+        }
+        
+        .buttons {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            min-width: 140px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            background: linear-gradient(135deg, #1E88E5, #1565C0);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .input-container {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        input {
+            width: 80px;
+            padding: 12px;
+            border-radius: 50px;
+            border: 2px solid #dde1e7;
+            margin-right: 10px;
+            text-align: center;
+            font-size: 1rem;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: border 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .input-label {
+            font-size: 1rem;
+            color: #555;
+            margin-left: 5px;
+        }
+        
+        .stats {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 10px;
+            margin: 25px 0;
+        }
+        
+        .stat-box {
+            background: linear-gradient(to bottom right, #e3f2fd, #bbdefb);
+            padding: 15px;
+            border-radius: 12px;
+            min-width: 100px;
+            flex: 1;
+            min-width: 28%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+        }
+        
+        .stat-box:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-title {
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        /* Water droplet animation */
+        @keyframes dropFall {
+            0% { transform: translateY(-20px); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(0); opacity: 0; }
+        }
+        
+        .water-drop {
+            position: absolute;
+            width: 15px;
+            height: 20px;
+            background-color: var(--water-color);
+            border-radius: 10px 10px 15px 15px;
+            left: 50%;
+            opacity: 0;
+            z-index: -1;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            .buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                width: 80%;
+            }
+            
+            .bottle-container {
+                height: 280px;
+            }
+            
+            .stats {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stat-box {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stay Hydrated!</h1>
+        
+        <div class="water-bottle">
+            <div class="bottle-container">
+                <svg class="bottle-svg" viewBox="0 0 100 200" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Bottle cap -->
+                    <ellipse cx="50" cy="15" rx="10" ry="5" fill="#0D47A1" opacity="0.9"/>
+                    <rect x="40" y="15" width="20" height="5" fill="#0D47A1" opacity="0.9"/>
+                    
+                    <!-- Bottle neck -->
+                    <path d="M40,20 L40,40 C40,40 35,50 35,50 L35,55 L65,55 L65,50 C65,50 60,40 60,40 L60,20 Z" fill="rgba(200, 220, 240, 0.5)" stroke="var(--bottle-outline)" stroke-width="1"/>
+                    
+                    <!-- Bottle body outline -->
+                    <path d="M35,55 L35,170 C35,180 65,180 65,170 L65,55 Z" fill="rgba(200, 220, 240, 0.5)" stroke="var(--bottle-outline)" stroke-width="1"/>
+                    
+                    <!-- Bottle ridges -->
+                    <path d="M35,65 C40,68 60,68 65,65" fill="none" stroke="var(--bottle-outline)" stroke-width="0.5"/>
+                    <path d="M35,75 C40,78 60,78 65,75" fill="none" stroke="var(--bottle-outline)" stroke-width="0.5"/>
+                    
+                    <!-- Water in bottle - will be dynamically adjusted -->
+                    <path id="water-path" d="M35,55 L35,170 C35,180 65,180 65,170 L65,55 Z" fill="var(--water-color)"/>
+                    
+                    <!-- Water waves -->
+                    <path id="water-waves" d="M35,55 C40,58 60,52 65,55" fill="none" stroke="var(--water-highlight)" stroke-width="1.5"/>
+                    
+                    <!-- Bottle shine/highlight -->
+                    <path d="M40,55 L40,165" fill="none" stroke="var(--water-highlight)" stroke-width="3" opacity="0.5"/>
+                    <path d="M45,55 L45,165" fill="none" stroke="var(--water-highlight)" stroke-width="1.5" opacity="0.3"/>
+                    
+                    <!-- Measurement markings -->
+                    <line x1="68" y1="170" x2="72" y2="170" stroke="#555" stroke-width="1"/>
+                    <text x="74" y="172" font-size="5" fill="#555">0%</text>
+                    
+                    <line x1="68" y1="150" x2="72" y2="150" stroke="#555" stroke-width="1"/>
+                    <text x="74" y="152" font-size="5" fill="#555">25%</text>
+                    
+                    <line x1="68" y1="130" x2="72" y2="130" stroke="#555" stroke-width="1"/>
+                    <text x="74" y="132" font-size="5" fill="#555">50%</text>
+                    
+                    <line x1="68" y1="110" x2="72" y2="110" stroke="#555" stroke-width="1"/>
+                    <text x="74" y="112" font-size="5" fill="#555">75%</text>
+                    
+                    <line x1="68" y1="90" x2="72" y2="90" stroke="#555" stroke-width="1"/>
+                    <text x="74" y="92" font-size="5" fill="#555">100%</text>
+                </svg>
+                <div class="water-level-indicator">100%</div>
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-title">Target</div>
+                <div class="stat-value">2000 ml</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">Consumed</div>
+                <div class="stat-value" id="consumed-value">0 ml</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">Remaining</div>
+                <div class="stat-value" id="remaining-value">2000 ml</div>
+            </div>
+        </div>
+        
+        <div class="quote-container">
+            <p class="quote-text" id="motivation-quote">Hydration is the key to feeling great throughout the day!</p>
+        </div>
+        
+        <div class="input-container">
+            <input type="number" id="water-amount" placeholder="ml" min="50" max="1000" value="250">
+            <span class="input-label">ml</span>
+        </div>
+        
+        <div class="buttons">
+            <button id="drink-btn">I Drank Water</button>
+            <button id="refill-btn">Refill Bottle</button>
+        </div>
+    </div>
+
+    <script>
+        // Water tracking variables
+        let bottleCapacity = 1000; // ml
+        let currentWaterLevel = bottleCapacity; // Start with full bottle
+        let dailyTarget = 2000; // ml
+        let totalConsumed = 0;
+        
+        // DOM elements
+        const waterPath = document.getElementById('water-path');
+        const waterWaves = document.getElementById('water-waves');
+        const waterLevelIndicator = document.querySelector('.water-level-indicator');
+        const quoteElement = document.getElementById('motivation-quote');
+        const consumedValue = document.getElementById('consumed-value');
+        const remainingValue = document.getElementById('remaining-value');
+        const waterAmountInput = document.getElementById('water-amount');
+        const drinkBtn = document.getElementById('drink-btn');
+        const refillBtn = document.getElementById('refill-btn');
+        const bottleContainer = document.querySelector('.bottle-container');
+        
+        // Motivational quotes
+        const quotes = [
+            "Hydration is the key to feeling great throughout the day!",
+            "Water is the driving force of all nature. Keep drinking!",
+            "Your body is 60% water, keep it that way!",
+            "A cup of water a day keeps the doctor away!",
+            "Stay hydrated, stay focused, stay healthy!",
+            "Drinking water is like taking a shower for your insides.",
+            "Water is the best natural remedy - drink your way to better health!",
+            "Hydrate or die-drate! Keep that water flowing!",
+            "Your brain is 75% water - keep it well hydrated for better thinking!",
+            "Water: the most underrated health hack. Drink up!"
+        ];
+        
+        // Create water droplet element
+        function createWaterDrop() {
+            const drop = document.createElement('div');
+            drop.classList.add('water-drop');
+            drop.style.animation = `dropFall ${Math.random() * 0.5 + 1}s ease-in forwards`;
+            drop.style.left = `${Math.random() * 60 + 20}%`;
+            drop.style.top = `${Math.random() * 30 + 30}%`;
+            bottleContainer.appendChild(drop);
+            
+            // Remove the drop after animation completes
+            setTimeout(() => {
+                drop.remove();
+            }, 1500);
+        }
+        
+        // Update the water level in the SVG bottle
+        function updateWaterLevel() {
+            const percentage = (currentWaterLevel / bottleCapacity) * 100;
+            
+            // Calculate water level height
+            // Map from 0-100% to bottom-top positions (170-90 in SVG)
+            const minHeight = 170; // Bottom of bottle
+            const maxHeight = 90;  // Top water level
+            const range = minHeight - maxHeight;
+            const waterHeight = minHeight - (range * percentage / 100);
+            
+            // Update the water path in the SVG
+            if (percentage > 0) {
+                waterPath.setAttribute('d', `M35,${waterHeight} L35,170 C35,180 65,180 65,170 L65,${waterHeight} Z`);
+                waterWaves.setAttribute('d', `M35,${waterHeight} C40,${waterHeight-3} 60,${waterHeight+3} 65,${waterHeight}`);
+                waterWaves.style.display = 'block';
+            } else {
+                // Empty bottle
+                waterPath.setAttribute('d', `M35,170 L35,170 C35,180 65,180 65,170 L65,170 Z`);
+                waterWaves.style.display = 'none';
+            }
+            
+            // Update the percentage text
+            waterLevelIndicator.textContent = `${Math.round(percentage)}%`;
+            
+            // Update stat values
+            consumedValue.textContent = `${totalConsumed} ml`;
+            remainingValue.textContent = `${Math.max(0, dailyTarget - totalConsumed)} ml`;
+            
+            // Show a random quote when water level changes
+            updateQuote();
+        }
+        
+        // Update the motivational quote
+        function updateQuote() {
+            const randomIndex = Math.floor(Math.random() * quotes.length);
+            quoteElement.textContent = quotes[randomIndex];
+        }
+        
+        // Create water wave animation
+        function animateWaves() {
+            let waveOffset = 0;
+            
+            function updateWave() {
+                if (currentWaterLevel > 0) {
+                    const percentage = (currentWaterLevel / bottleCapacity) * 100;
+                    const minHeight = 170; // Bottom of bottle
+                    const maxHeight = 90;  // Top water level
+                    const range = minHeight - maxHeight;
+                    const waterHeight = minHeight - (range * percentage / 100);
+                    
+                    waveOffset += 0.2;
+                    const amplitude = Math.min(5, 2 + (percentage / 20));
+                    
+                    waterWaves.setAttribute('d', 
+                        `M35,${waterHeight} C40,${waterHeight-amplitude*Math.sin(waveOffset)} ` +
+                        `50,${waterHeight+amplitude*Math.sin(waveOffset+1)} ` +
+                        `65,${waterHeight}`
+                    );
+                }
+                
+                requestAnimationFrame(updateWave);
+            }
+            
+            updateWave();
+        }
+        
+        // Handle drinking water
+        drinkBtn.addEventListener('click', function() {
+            const amount = parseInt(waterAmountInput.value);
+            
+            if (isNaN(amount) || amount <= 0) {
+                alert("Please enter a valid amount!");
+                return;
+            }
+            
+            if (currentWaterLevel < amount) {
+                alert("Your bottle doesn't have enough water! Please refill.");
+                return;
+            }
+            
+            // Animation effect
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => createWaterDrop(), i * 200);
+            }
+            
+            // Animate the button
+            this.classList.add('clicked');
+            setTimeout(() => this.classList.remove('clicked'), 300);
+            
+            currentWaterLevel -= amount;
+            totalConsumed += amount;
+            
+            updateWaterLevel();
+            
+            // Celebrate if daily target is met
+            if (totalConsumed >= dailyTarget) {
+                quoteElement.textContent = "🎉 Congratulations! You've reached your daily water goal! 🎉";
+                celebrateGoalReached();
+            }
+        });
+        
+        // Handle refilling the bottle
+        refillBtn.addEventListener('click', function() {
+            // Animation for refill
+            const originalLevel = currentWaterLevel;
+            const targetLevel = bottleCapacity;
+            const startTime = Date.now();
+            const duration = 1000; // 1 second animation
+            
+            function animateRefill() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                currentWaterLevel = originalLevel + (targetLevel - originalLevel) * progress;
+                updateWaterLevel();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animateRefill);
+                }
+            }
+            
+            animateRefill();
+            
+            quoteElement.textContent = "Bottle refilled! Ready to stay hydrated!";
+        });
+        
+        // Celebrate reaching daily goal
+        function celebrateGoalReached() {
+            // Simple celebration effect
+            document.querySelector('.container').style.animation = 'pulse 0.5s 3';
+            
+            // Create celebration animation
+            const colors = ['#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#F44336'];
+            
+            for (let i = 0; i < 30; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.style.position = 'absolute';
+                    confetti.style.width = `${Math.random() * 10 + 5}px`;
+                    confetti.style.height = `${Math.random() * 10 + 5}px`;
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.borderRadius = '50%';
+                    confetti.style.top = `${Math.random() * 50 + 25}%`;
+                    confetti.style.left = `${Math.random() * 80 + 10}%`;
+                    confetti.style.zIndex = '1000';
+                    confetti.style.opacity = '0';
+                    confetti.style.animation = `confetti ${Math.random() * 2 + 1}s forwards`;
+                    
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 3000);
+                }, i * 100);
+            }
+        }
+        
+        // Add keyframe for confetti
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes confetti {
+                0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+                100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+            }
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.03); }
+                100% { transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Initialize the app
+        updateWaterLevel();
+        animateWaves();
+        
+        // Add responsive behavior for input
+        waterAmountInput.addEventListener('focus', function() {
+            this.select(); // Select all text when focused
+        });
+        
+        // Make sure input stays within reasonable range
+        waterAmountInput.addEventListener('change', function() {
+            const val = parseInt(this.value);
+            if (val > 1000) this.value = 1000;
+            if (val < 50) this.value = 50;
+        });
+    </script>
+</body>
+</html>
